@@ -1,0 +1,204 @@
+/*
+RUN INTO /root/Projects/Final_Park_6_05/Pentagon/
+*/
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Heimdallr</title>
+    <style type="text/css">    
+        * { margin: 0; padding: 0; }
+        p { padding: 10px; }
+        body {font-size: 19px}
+        #header_one { position: absolute; left: 0; top: 0; width: 50%; text-align: center; font-size: x-large; border-radius: 6px;}
+        #header_two { position: absolute; right: 0; top: 0; width: 50%; text-align: center; font-size: x-large; border-radius: 6px;}
+        #plates { position: absolute; left: 0; top: 17%; width: 50%; }
+        #plates_differ { position: absolute; right: 0; top: 17%; width: 50%; }
+        #load_more {display: inline-block; position: fixed; top: 9px; right: 9px; text-align: center; z-index: 102;} 
+    </style>
+    <script src="{{ jquery }}"></script>
+</head>
+<body>
+    <table id="plates">
+        <h3 id='header_one' style="position: fixed; top: 0; left: 0; background-color: lightgrey; height: 50px; padding-top: 15px; z-index: 101">All shots</h3>
+        <thead>
+            <tr class="number_header">
+                <td style="text-align: left;">Photo</td>
+                <td style="text-align: left;">Plate number</td>
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+
+     <table id="plates_differ">
+        <h3 id='header_two' style="position: fixed; top: 0; right: 0; background-color: lightgrey; padding-top: 15px; height: 50px; z-index: 101">Differences</h3>
+        <thead>
+            <tr class="number_header">
+                <td style="text-align: left;">Photo</td>
+                <td style="text-align: left;">Plate number</td>
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+        <tfoot>
+            <div id='load_more'>
+                <button id="kk" style="border-radius: 6px" onclick="loadMore();">
+                    <p>Load more</p>
+                </button>
+            </div>
+        </tfoot>
+    </table>
+
+    <script type="text/javascript">
+        $( document ).ready(function () {
+                loadInitial();
+            }
+        );
+        function loadInitial() {
+            $.get("/root/Projects/Final_Final/Godfather/cars/?method=initial", function(data) {
+                $.each(data, function(i, obj) {
+                    if (obj.plateno_new == obj.plateno) {
+                        $('#plates').find('tbody')
+                            .append($('<tr>')
+                                .append($('<td style="width: 100%; float: right">')
+                                    .append($('<img style="float: left; width: 50%">')
+                                        .attr('src', obj.full_image)
+                                        .attr('width', 360)
+                                        .attr('height', 270)
+                                    )
+                                .append($('<td style="width: 50%; float: right; text-align: right">')
+                                    .text('our: ' + obj.plateno +'\nvengr: '+obj.plateno_new)
+                                    //.text(obj.plateno_new)
+                                    )
+                                .attr('id', obj.rowid)
+                                .attr('class', 'table-row')
+                            )
+                        )}
+                    else if (obj.plateno_new != obj.plateno) {
+                        $('#plates').find('tbody')
+                            .append($('<tr>')
+                                .append($('<td style="width: 100%; float: right">')
+                                    .append($('<img style="float: left; width: 50%">')
+                                        .attr('src', obj.full_image)
+                                        .attr('width', 360)
+                                        .attr('height', 270)
+                                    )
+                                .append($('<td style="width: 50%; float: right; text-align: right">')
+                                    .text('our: ' + obj.plateno +'\nvengr: '+obj.plateno_new)
+                                    //.text(obj.plateno_new)
+                                    ))
+                                .attr('id', obj.rowid)
+                                .attr('class', 'table-row'))
+                        $('#plates_differ').find('tbody')
+                            .append($('<tr>')
+                                .append($('<td style="width: 100%; float: right">')
+                                    .append($('<img style="float: left; width: 50%">')
+                                        .attr('src', obj.full_image)
+                                        .attr('width', 360)
+                                        .attr('height', 270)
+                                    )
+                                .append($('<td style="width: 50%; float: right; text-align: right">')
+                                    .text('our: ' + obj.plateno +'\nvengr: '+obj.plateno_new)
+                                    //.text(obj.plateno_new)
+                                ))
+                                .attr('id', obj.rowid)
+                                .attr('class', 'table-row'))                        
+                        }
+                });
+                setTimeout(doPoll, 5000);
+            });
+        }
+        function doPoll() {
+            let max = $('.table-row').get().reduce(function(a, b){
+                return Math.max(a, b.id)
+            }, Number.NEGATIVE_INFINITY);
+
+            $.get("/root/Projects/Final_Final/Godfather/cars/?method=new&last_id=" + max, function(data) {
+                $.each(data, function(i, obj) {
+                    $('#plates').find('tbody')
+                        .prepend($('<tr>')
+                            .append($('<td>')
+                                .text('our: ' + obj.plateno +'\nvengr: '+obj.plateno_new)
+                            )
+                            .append($('<td>')
+                                .append($('<img>')
+                                    .attr('src', obj.full_image)
+                                    .attr('width', 360)
+                                    .attr('height', 270)
+                                )
+                            )
+                            .attr('id', obj.rowid)
+                            .attr('class', 'table-row')
+                        )
+                });
+                setTimeout(doPoll, 5000);
+            });
+        }
+
+        function loadMore() {
+            let min = $('.table-row').get().reduce(function(a, b){
+                return Math.min(a, b.id)
+            }, Number.POSITIVE_INFINITY);
+
+            $.get("/root/Projects/Final_Final/Godfather/cars/?method=old&last_id=" + min, function(data) {
+                $.each(data, function(i, obj) {
+                    if (obj.plateno_new == obj.plateno) {
+                        $('#plates').find('tbody')
+                            .append($('<tr>')
+                                .append($('<td style="width: 100%; float: right">')
+                                    .append($('<img style="float: left; width: 50%">')
+                                        .attr('src', obj.full_image)
+                                        .attr('width', 360)
+                                        .attr('height', 270)
+                                    )
+                                .append($('<td style="width: 50%; float: right; text-align: right">')
+                                    .text('our: ' + obj.plateno +'\nvengr: '+obj.plateno_new)
+                                    //.text(obj.plateno_new)
+                                    )
+                                .attr('id', obj.rowid)
+                                .attr('class', 'table-row')
+                            )
+                        )}
+                    else if (obj.plateno_new != obj.plateno) {
+                        $('#plates').find('tbody')
+                            .append($('<tr>')
+                                .append($('<td style="width: 100%; float: right">')
+                                    .append($('<img style="float: left; width: 50%">')
+                                        .attr('src', obj.full_image)
+                                        .attr('width', 360)
+                                        .attr('height', 270)
+                                    )
+                                .append($('<td style="width: 50%; float: right; text-align: right; color: red">')
+                                    .text('our: ' + obj.plateno +'\nvengr: '+obj.plateno_new)
+                                        .attr('style', 'color: red')
+                                    //.text(obj.plateno_new)
+                                    ))
+                                .attr('id', obj.rowid)
+                                .attr('class', 'table-row'))
+                        $('#plates_differ').find('tbody')
+                            .append($('<tr>')
+                                .append($('<td style="width: 100%; float: right">')
+                                    .append($('<img style="float: left; width: 50%">')
+                                        .attr('src', obj.full_image)
+                                        .attr('width', 360)
+                                        .attr('height', 270)
+                                    )
+                                .append($('<td style="width: 50%; float: right; text-align: right">')
+                                    .text('our: ' + obj.plateno +'\nvengr: '+obj.plateno_new)
+                                    //.text(obj.plateno_new)
+                                ))
+                                .attr('id', obj.rowid)
+                                .attr('class', 'table-row'))                        
+                        }
+                });
+                setTimeout(doPoll, 5000);
+            });
+        }
+        
+    </script>
+
+</body>
+</html>
